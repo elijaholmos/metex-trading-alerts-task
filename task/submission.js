@@ -8,8 +8,6 @@ class Submission {
     // how to use stores and track multiple stocks at once?
 
     return new Promise(async (resolve) => {
-      const value = 'Hello World!';
-
       try {
         const slack = new WebClient(process.env.SLACK_TOKEN);
         console.log(`launching browser...`);
@@ -51,26 +49,32 @@ class Submission {
             new TickerWatcher({
               ticker,
               threshold: 0.0003,
+              // duration: 5000,
             }),
         );
         watchers.forEach((watcher) => watcher.on('priceChange', priceChangeHandler));
 
-        watchers.forEach((watcher) => watcher.on('open', () => console.log('watcher opened')));
-
         watchers.forEach((watcher) =>
-          watcher.on('close', () => {
-            console.log('watcher closed');
-            resolve('watcher closed');
+          watcher.on('open', () => console.log(`watcher opened ${watcher.ticker}`)),
+        );
+
+        const finalStoreData = {};
+        watchers.forEach((watcher) =>
+          watcher.on('close', ({ initialPrice, endPrice }) => {
+            console.log(`watcher closed ${watcher.ticker}`, initialPrice, endPrice);
+            // set the store with the key of ticker and the value of endprice?
+            finalStoreData[watcher.ticker] = endPrice;
           }),
         );
 
-        if (value) {
-          // store value on NeDB
-          await namespaceWrapper.storeSet('value', value);
-        }
+        setTimeout(async () => {
+          await browser.close();
+          await namespaceWrapper.storeSet('prices', finalStoreData);
+          void resolve(finalStoreData);
+        }, 90000 + 1000);
       } catch (err) {
         console.log('ERROR IN EXECUTING TASK', err);
-        resolve('ERROR IN EXECUTING TASK' + err);
+        void resolve('ERROR IN EXECUTING TASK' + err);
       }
     });
   }
@@ -99,8 +103,8 @@ class Submission {
 
     // The code below shows how you can fetch your stored value from level DB
 
-    const value = await namespaceWrapper.storeGet('value'); // retrieves the value
-    console.log('VALUE', value);
+    const value = await namespaceWrapper.storeGet('prices'); // retrieves the value
+    console.log('VALUE (prices)', value);
     return value;
   }
 }

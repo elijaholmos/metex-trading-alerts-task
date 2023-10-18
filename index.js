@@ -1,9 +1,5 @@
 const { coreLogic } = require('./coreLogic');
-const {
-  namespaceWrapper,
-  taskNodeAdministered,
-  app,
-} = require('./_koiiNode/koiiNode');
+const { namespaceWrapper, taskNodeAdministered, app } = require('./_koiiNode/koiiNode');
 
 if (app) {
   //  Write your Express Endpoints here.
@@ -19,10 +15,10 @@ if (app) {
     res.status(200).json({ taskState: state });
   });
   app.get('/value', async (req, res) => {
-    const value = await namespaceWrapper.storeGet('value');
-    console.log('value', value);
+    const value = await namespaceWrapper.storeGet('prices');
+    console.log('prices', value);
 
-    res.status(200).json({ value: value });
+    res.status(200).json({ value });
   });
 }
 
@@ -31,7 +27,7 @@ async function setup() {
   ################## DO NOT EDIT BELOW #################
   ######################################################*/
   await namespaceWrapper.defaultTaskSetup();
-  process.on('message', m => {
+  process.on('message', (m) => {
     console.log('CHILD got message:', m);
     if (m.functionCall == 'submitPayload') {
       console.log('submitPayload called');
