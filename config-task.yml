@@ -1,7 +1,7 @@
 # Name and metadata of your task
-task_name: 'Your-task-name'
-author: 'koii'
-description: 'This will be description of your task'
+task_name: 'Trading Alerts Task'
+author: 'metex'
+description: 'Test desc'
 repositoryUrl: 'https://github.com/koii-network/task-examples'
 imageUrl: 'imageUrl'
 
@@ -37,9 +37,9 @@ space: 1
 # To add more task variables, please refer the type,value,description format shown below
 
 requirementsTags:
-  - type: TASK_VARIABLE
-    value: 'WEB3.STORAGE'
-    description: 'used to store the data'
+  # - type: TASK_VARIABLE
+  #   value: 'WEB3.STORAGE'
+  #   description: 'used to store the data'
   - type: CPU
     value: '4-core'
   - type: RAM
