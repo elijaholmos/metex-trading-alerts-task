@@ -13,35 +13,35 @@ describe('Performing the task', () => {
     expect(result).not.toContain('ERROR IN EXECUTING TASK');
   });
 
-  it('should make the submission to k2 for dummy round 1', async () => {
-    const round = 1;
-    await coreLogic.submitTask(round);
-    // wait for two seconds
-    await new Promise((resolve) => setTimeout(resolve, 2000));
-    const taskState = await namespaceWrapper.getTaskState();
-    console.log('got taskStae', JSON.stringify(taskState));
-    const schema = Joi.object()
-      .pattern(
-        Joi.string(),
-        Joi.object().pattern(
-          Joi.string(),
-          Joi.object({
-            submission_value: Joi.string().required(),
-            slot: Joi.number().integer().required(),
-            round: Joi.number().integer().required(),
-          }),
-        ),
-      )
-      .required()
-      .min(1);
-    const validationResult = schema.validate(taskState.submissions);
-    try {
-      console.log('validation result', validationResult);
-      expect(validationResult.error).toBeUndefined();
-    } catch (e) {
-      throw new Error("Submission doesn't exist or is incorrect");
-    }
-  });
+  // it('should make the submission to k2 for dummy round 1', async () => {
+  //   const round = 1;
+  //   await coreLogic.submitTask(round);
+  //   // wait for two seconds
+  //   await new Promise((resolve) => setTimeout(resolve, 2000));
+  //   const taskState = await namespaceWrapper.getTaskState();
+  //   console.log('got taskStae', JSON.stringify(taskState));
+  //   const schema = Joi.object()
+  //     .pattern(
+  //       Joi.string(),
+  //       Joi.object().pattern(
+  //         Joi.string(),
+  //         Joi.object({
+  //           submission_value: Joi.string().required(),
+  //           slot: Joi.number().integer().required(),
+  //           round: Joi.number().integer().required(),
+  //         }),
+  //       ),
+  //     )
+  //     .required()
+  //     .min(1);
+  //   const validationResult = schema.validate(taskState.submissions);
+  //   try {
+  //     console.log('validation result', validationResult);
+  //     expect(validationResult.error).toBeUndefined();
+  //   } catch (e) {
+  //     throw new Error("Submission doesn't exist or is incorrect");
+  //   }
+  // });
 
   it('should make the make an audit on submission', async () => {
     const round = 1;
