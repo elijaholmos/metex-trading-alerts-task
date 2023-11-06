@@ -2,16 +2,28 @@ const { namespaceWrapper } = require('../_koiiNode/koiiNode');
 const { TickerWatcher, dynamicImport } = require('@metex/trading-alerts');
 const { WebClient } = require('@slack/web-api');
 const puppeteer = require('puppeteer');
+const PCR = require('puppeteer-chromium-resolver');
 
 class Submission {
   task(round) {
+    // namespaceWrapper.getTaskState().stake_list;
     // how to use stores and track multiple stocks at once?
 
     return new Promise(async (resolve) => {
       try {
         const slack = new WebClient(process.env.SLACK_TOKEN);
         console.log(`launching browser...`);
-        const browser = await puppeteer.launch({ headless: 'new' });
+        const options = {};
+        const stats = await PCR(options);
+        console.log(
+          '*****************************************CALLED PURCHROMIUM RESOLVER*****************************************',
+        );
+        const browser = await stats.puppeteer.launch({
+          userAgent:
+            'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36',
+          args: ['--no-sandbox', '--disable-setuid-sandbox', '--disable-gpu'],
+          executablePath: stats.executablePath,
+        });
 
         const TICKERS = ['AAPL', 'GME', 'MSFT', 'TWTR', 'TSLA', 'AMZN'];
 
@@ -20,6 +32,11 @@ class Submission {
 
           console.log(`[${ticker}]: creating page...`);
           const page = await browser.newPage();
+          await this.page.setUserAgent(
+            'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36',
+          );
+          // TODO - Enable console logs in the context of the page and export them for diagnostics here
+          await this.page.setViewport({ width: 1920, height: 1080 });
           console.log(`[${ticker}]: getting articles...`);
           const articles = await (
             await dynamicImport(
