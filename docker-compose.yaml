@@ -4,7 +4,7 @@ services:
     image: public.ecr.aws/koii-network/task_node:latest
     command: yarn initialize-start
     extra_hosts:
-      - "host.docker.internal:host-gateway"
+      - 'host.docker.internal:host-gateway'
 
     env_file: .env-local
 
