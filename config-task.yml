@@ -2,24 +2,25 @@
 task_name: 'Trading Alerts Task'
 author: 'metex'
 description: 'Test desc'
-repositoryUrl: 'https://github.com/koii-network/task-examples'
+repositoryUrl: 'https://github.com/elijaholmos/metex-trading-alerts-task'
 imageUrl: 'imageUrl'
 
 # network value can be DEVELOPMENT , ARWEAVE or IPFS, Recommended IPFS when deploying to testnet as the cli automatically takes care of uploading the executable with the help of web3.js key
-task_executable_network: 'DEVELOPMENT'
+# task_executable_network: 'DEVELOPMENT'
+task_executable_network: 'IPFS'
 
 # Path to your executable webpack if the selected network is IPFS and in case of DEVELOPMENT  name it as main
-task_audit_program: 'main'
+task_audit_program: 'dist/main.js'
 
 # Total round time of your task : it must be given in slots and each slot is roughly equal to 408ms
-round_time: 650
+round_time: 250
 
 audit_window: 250
 submission_window: 250
 
 # Amounts in KOII
 
-minimum_stake_amount: 2
+minimum_stake_amount: 0.1
 
 # total_bounty_amount cannot be grater than bounty_amount_per_round
 # total bounty is not accepted in case of update task
@@ -40,6 +41,15 @@ requirementsTags:
   # - type: TASK_VARIABLE
   #   value: 'WEB3.STORAGE'
   #   description: 'used to store the data'
+  - type: TASK_VARIABLE
+    value: 'SLACK_TOKEN'
+    description: 'slack token'
+  - type: TASK_VARIABLE
+    value: 'TIINGO_TOKEN'
+    description: 'TIINGO TOKEN'
+  - type: TASK_VARIABLE
+    value: 'THRESHOLD'
+    description: 'What percent delta will trigger the alert'
   - type: CPU
     value: '4-core'
   - type: RAM
@@ -50,7 +60,7 @@ requirementsTags:
 # OPTIONAL variables variables for creating task / REQUIRED variables for update task
 
 # OPTIONAL Only provide the taskId if you are updating the task otherwise leave blank
-task_id: ''
+task_id: 'BWmVHADrbvnCP4TWVobuB5fm9MmYuKPJ1zsuU2yEumMt'
 
 # Provide the description for changes made in new version of task
-migrationDescription: ''
+migrationDescription: 'dev testing'

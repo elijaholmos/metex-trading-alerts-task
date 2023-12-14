@@ -1,5 +1,5 @@
 const { namespaceWrapper } = require('../_koiiNode/koiiNode');
-const { TickerWatcher, dynamicImport } = require('@metex/trading-alerts');
+const { TickerWatcher, dynamicImport, scrapers } = require('@metex/trading-alerts');
 const { WebClient } = require('@slack/web-api');
 const puppeteer = require('puppeteer');
 const PCR = require('puppeteer-chromium-resolver');
@@ -25,24 +25,26 @@ class Submission {
           executablePath: stats.executablePath,
         });
 
-        const TICKERS = ['AAPL', 'GME', 'MSFT', 'TWTR', 'TSLA', 'AMZN'];
+        const TICKERS = ['AAPL', 'GME', 'MSFT', 'TSLA', 'AMZN'];
 
         const priceChangeHandler = async ({ ticker, initialPrice, price, delta, threshold }) => {
           console.log('price change!', ticker, initialPrice, price, delta);
 
           console.log(`[${ticker}]: creating page...`);
           const page = await browser.newPage();
-          await this.page.setUserAgent(
+          await page.setUserAgent(
             'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36',
           );
           // TODO - Enable console logs in the context of the page and export them for diagnostics here
-          await this.page.setViewport({ width: 1920, height: 1080 });
+          await page.setViewport({ width: 1920, height: 1080 });
+          console.log('detecting scrapersList...');
+          const scrapersList = [scrapers.bloomberg];
+          console.log('got scrapersList!', scrapersList);
+
           console.log(`[${ticker}]: getting articles...`);
-          const articles = await (
-            await dynamicImport(
-              'https://raw.githubusercontent.com/elijaholmos/trading-alerts/main/scrapers/bloomberg.js',
-            )
-          ).run({ page, ticker });
+          const articles = [];
+          for (const scraper of scrapersList)
+            articles.push(...((await scraper({ page, ticker })) ?? []));
           console.log(`[${ticker}]: got articles!`, articles);
           page.close();
 
@@ -61,11 +63,13 @@ class Submission {
           });
         };
 
+        const threshold = Number(process.env?.THRESHOLD?.replace('%', '')) / 100 || 0.03;
+        console.log(`Threshold incoming as ${process.env?.THRESHOLD}, set to ${threshold}`);
         const watchers = TICKERS.map(
           (ticker) =>
             new TickerWatcher({
               ticker,
-              threshold: 0.0003,
+              threshold,
               // duration: 5000,
             }),
         );

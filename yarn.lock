@@ -667,10 +667,10 @@
     "@jridgewell/resolve-uri" "^3.1.0"
     "@jridgewell/sourcemap-codec" "^1.4.14"
 
-"@metex/trading-alerts@^0.1.0":
-  version "0.1.0"
-  resolved "https://registry.npmjs.org/@metex/trading-alerts/-/trading-alerts-0.1.0.tgz"
-  integrity sha512-3Q/OVrK4yPxPx2eENUvNt1bmSnJGyNfT4D9VjJpU3QeF3X+m2i45lbOmxVpKICCLvQ8HRVy1d3W8+cSDhpLMvA==
+"@metex/trading-alerts@^0.1.1":
+  version "0.1.1"
+  resolved "https://registry.yarnpkg.com/@metex/trading-alerts/-/trading-alerts-0.1.1.tgz#c2bf1bcc211044f39866d0a7ea51e667da6ace80"
+  integrity sha512-eutEs3ZyFYuXdS7mutZ+l+flo6JQNHjPfwyUqidFa2dyLB+WarnA46P0TaLvFeyuZ9qAoOEKL24LfGI7++Etfw==
   dependencies:
     ws "8.13.0"
 
