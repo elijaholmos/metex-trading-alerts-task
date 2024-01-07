@@ -1,6 +1,5 @@
 const { namespaceWrapper } = require('../_koiiNode/koiiNode');
 const { TickerWatcher, dynamicImport, scrapers } = require('@metex/trading-alerts');
-const { WebClient } = require('@slack/web-api');
 const puppeteer = require('puppeteer');
 const PCR = require('puppeteer-chromium-resolver');
 
@@ -11,7 +10,6 @@ class Submission {
 
     return new Promise(async (resolve) => {
       try {
-        const slack = new WebClient(process.env.SLACK_TOKEN);
         console.log(`launching browser...`);
         const options = {};
         const stats = await PCR(options);
@@ -57,10 +55,17 @@ class Submission {
               \r${articles.map(({ title, url }) => `• <${url}|${title}>`).join('\n')}
             `;
 
-          await slack.chat.postMessage({
-            channel: '#trading-alerts',
-            text,
-          });
+          // store results to be published later
+          const storeData = {
+            ticker,
+            initialPrice,
+            price,
+            delta,
+            threshold,
+            articles,
+          };
+          console.log('writing the following data to the priceChange store', storeData);
+          await namespaceWrapper.storeSet('priceChange', storeData);
         };
 
         const threshold = Number(process.env?.THRESHOLD?.replace('%', '')) / 100 || 0.03;
@@ -90,7 +95,7 @@ class Submission {
 
         setTimeout(async () => {
           await browser.close();
-          await namespaceWrapper.storeSet('prices', finalStoreData);
+          await namespaceWrapper.storeSet('endPrices', finalStoreData);
           void resolve(finalStoreData);
         }, 90000 + 1000);
       } catch (err) {
@@ -103,11 +108,11 @@ class Submission {
   async submitTask(roundNumber) {
     console.log('submitTask called with round', roundNumber);
     try {
-      console.log('inside try');
+      console.log('inside submitTask try');
       console.log(await namespaceWrapper.getSlot(), 'current slot while calling submit');
       const submission = await this.fetchSubmission(roundNumber);
       console.log('SUBMISSION', submission);
-      await namespaceWrapper.checkSubmissionAndUpdateRound(submission, roundNumber);
+      await namespaceWrapper.checkSubmissionAndUpdateRound(JSON.stringify(submission), roundNumber);
       console.log('after the submission call');
       return submission;
     } catch (error) {
@@ -124,8 +129,8 @@ class Submission {
 
     // The code below shows how you can fetch your stored value from level DB
 
-    const value = await namespaceWrapper.storeGet('prices'); // retrieves the value
-    console.log('VALUE (prices)', value);
+    const value = await namespaceWrapper.storeGet('finalPrices'); // retrieves the value
+    console.log('VALUE (finalPrices)', value);
     return value;
   }
 }

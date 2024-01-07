@@ -47,6 +47,9 @@ requirementsTags:
   - type: TASK_VARIABLE
     value: 'THRESHOLD'
     description: 'What percent delta will trigger the alert'
+  - type: TASK_VARIABLE
+    value: 'TICKERS'
+    description: 'Comma-separated list of stock tickers to track'
   - type: CPU
     value: '4-core'
   - type: RAM
