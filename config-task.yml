@@ -42,9 +42,6 @@ requirementsTags:
   #   value: 'WEB3.STORAGE'
   #   description: 'used to store the data'
   - type: TASK_VARIABLE
-    value: 'SLACK_TOKEN'
-    description: 'slack token'
-  - type: TASK_VARIABLE
     value: 'TIINGO_TOKEN'
     description: 'TIINGO TOKEN'
   - type: TASK_VARIABLE
