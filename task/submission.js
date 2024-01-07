@@ -1,5 +1,5 @@
 const { namespaceWrapper } = require('../_koiiNode/koiiNode');
-const { TickerWatcher, dynamicImport, scrapers } = require('@metex/trading-alerts');
+const { TickerWatcher, scrapers } = require('@metex/trading-alerts');
 const puppeteer = require('puppeteer');
 const PCR = require('puppeteer-chromium-resolver');
 
@@ -23,7 +23,7 @@ class Submission {
           executablePath: stats.executablePath,
         });
 
-        const TICKERS = ['AAPL', 'GME', 'MSFT', 'TSLA', 'AMZN'];
+        const TICKERS = process.env.TICKERS?.split(',') ?? ['AAPL', 'GME', 'MSFT', 'TSLA', 'AMZN'];
 
         const priceChangeHandler = async ({ ticker, initialPrice, price, delta, threshold }) => {
           console.log('price change!', ticker, initialPrice, price, delta);
