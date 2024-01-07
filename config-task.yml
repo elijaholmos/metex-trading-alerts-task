@@ -1,7 +1,7 @@
 # Name and metadata of your task
 task_name: 'Trading Alerts Task'
 author: 'metex'
-description: 'Test desc'
+description: 'https://www.metex.co'
 repositoryUrl: 'https://github.com/elijaholmos/metex-trading-alerts-task'
 imageUrl: 'imageUrl'
 
@@ -13,7 +13,7 @@ task_executable_network: 'IPFS'
 task_audit_program: 'dist/main.js'
 
 # Total round time of your task : it must be given in slots and each slot is roughly equal to 408ms
-round_time: 250
+round_time: 500
 
 audit_window: 250
 submission_window: 250
@@ -60,7 +60,7 @@ requirementsTags:
 # OPTIONAL variables variables for creating task / REQUIRED variables for update task
 
 # OPTIONAL Only provide the taskId if you are updating the task otherwise leave blank
-task_id: 'BWmVHADrbvnCP4TWVobuB5fm9MmYuKPJ1zsuU2yEumMt'
+task_id: 'gRVz4iQWuA5A41f7demxbiF4nT4iv43fRZTBYUVkuBa'
 
 # Provide the description for changes made in new version of task
 migrationDescription: 'dev testing'

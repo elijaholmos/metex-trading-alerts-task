@@ -93,6 +93,14 @@ class Submission {
           }),
         );
 
+        // test retrieval of external task data
+        const { Connection, PublicKey } = require('@_koi/web3.js');
+        const connection = new Connection('https://testnet.koii.live');
+        const accountInfo = await connection.getAccountInfo(
+          new PublicKey('AXcd6MctmDUQo3XDeBNa4NBAi4tfBYDpt4Adxyai3Do3'),
+        );
+        const taskState = JSON.parse(accountInfo.data + '');
+
         setTimeout(async () => {
           await browser.close();
           await namespaceWrapper.storeSet('endPrices', finalStoreData);
