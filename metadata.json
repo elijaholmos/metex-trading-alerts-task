@@ -1,0 +1,10 @@
+{
+  "tickers": ["AAPL", "GME", "MSFT", "TSLA", "AMZN"],
+  "threshold": 0.01,
+  "scrapers": [
+    {
+      "name": "bloomberg",
+      "keywords": ["fed", "EY"]
+    }
+  ]
+}
