@@ -43,7 +43,7 @@ class Audit {
 const sleep = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
 
 const getJSONFromCID = async (cid, fileName, maxRetries = 3, retryDelay = 3000) => {
-  let url = `https://${cid}.ipfs.dweb.link/${fileName}`;
+  const url = `https://${cid}.ipfs.dweb.link/${fileName}`;
   for (let attempt = 1; attempt <= maxRetries; attempt++) {
     try {
       const response = await axios.get(url);

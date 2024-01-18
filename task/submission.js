@@ -4,6 +4,7 @@ const { SpheronClient, ProtocolEnum } = require('@spheron/storage');
 const puppeteer = require('puppeteer');
 const PCR = require('puppeteer-chromium-resolver');
 const { writeFile } = require('fs/promises');
+const { default: axios } = require('axios');
 
 class Submission {
   task(round) {
@@ -14,6 +15,8 @@ class Submission {
 
     return new Promise(async (resolve) => {
       try {
+        const metadata = await getTaskMetadata();
+        console.log('retrieved metadata', JSON.stringify(metadata));
         const finalPriceSubmissionData = [];
 
         console.log(`launching browser...`);
@@ -28,7 +31,8 @@ class Submission {
           executablePath: stats.executablePath,
         });
 
-        const TICKERS = process.env.TICKERS?.split(',') ?? ['AAPL', 'GME', 'MSFT', 'TSLA', 'AMZN'];
+        const TICKERS = metadata.tickers;
+        if (!TICKERS) throw new Error('No tickers found in metadata');
         console.log('parsed TICKERS to the following value', TICKERS);
 
         const priceChangeHandler = async ({ ticker, initialPrice, price, delta, threshold }) => {
@@ -41,14 +45,27 @@ class Submission {
           );
           // TODO - Enable console logs in the context of the page and export them for diagnostics here
           await page.setViewport({ width: 1920, height: 1080 });
+          console.log('metadata.scrapers', JSON.stringify(metadata.scrapers));
           console.log('detecting scrapersList...');
-          const scrapersList = [scrapers.bloomberg];
+          /**
+           * @type {Array<Scraper & {run: function}>}
+           */
+          const scrapersList = metadata.scrapers.reduce((acc, _scraper) => {
+            const scraper = scrapers[_scraper.name];
+            if (!scraper) {
+              console.log(`[${ticker}]: scraper ${_scraper.name} not found in scrapers`);
+              return acc;
+            }
+            return [...acc, { ..._scraper, run: scraper }];
+          }, []);
           console.log('got scrapersList!', scrapersList);
 
           console.log(`[${ticker}]: getting articles...`);
           const articles = [];
           for (const scraper of scrapersList)
-            articles.push(...((await scraper({ page, ticker })) ?? []));
+            articles.push(
+              ...((await scraper.run({ page, ticker, keywords: scraper.keywords })) ?? []),
+            );
           console.log(`[${ticker}]: got articles!`, articles);
           page.close();
 
@@ -77,11 +94,12 @@ class Submission {
           finalPriceSubmissionData.push(storeData);
         };
 
-        const threshold = Number(process.env?.THRESHOLD?.replace('%', '')) / 100 || 0.03;
-        console.log(`Threshold incoming as ${process.env?.THRESHOLD}, set to ${threshold}`);
+        const threshold = metadata.threshold ?? 0.03;
+        console.log(`Threshold incoming as ${metadata.threshold}, set to ${threshold}`);
         const watchers = TICKERS.map(
           (ticker) =>
             new TickerWatcher({
+              token: process.env.TIINGO_TOKEN,
               ticker,
               threshold,
               // duration: 5000,
@@ -189,6 +207,46 @@ class Submission {
     for (const key of vars) if (!env[key]) throw new Error(`Missing environment variable ${key}`);
   }
 }
+
+/**
+ * @typedef {object} Metadata Task metadata
+ * @prop {string} version
+ * @prop {Array<string>} tickers
+ * @prop {number} threshold
+ * @prop {Array<Scraper>} scrapers
+ */
+/**
+ * @typedef {object} Scraper Scraper data object
+ * @prop {string} name
+ * @prop {Array<string>} keywords
+ */
+
+const sleep = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
+
+/**
+ * @returns {Promise<Metadata>}
+ */
+const getTaskMetadata = async (maxRetries = 3, retryDelay = 3000) => {
+  const url = 'https://elijaholmos.github.io/metex-trading-alerts-task/metadata.json';
+  for (let attempt = 1; attempt <= maxRetries; attempt++) {
+    try {
+      const response = await axios.get(url);
+      if (response.status === 200) {
+        return response.data;
+      } else {
+        console.log(`Attempt ${attempt}: Received status ${response.status}`);
+      }
+    } catch (error) {
+      console.log(`Attempt ${attempt} failed: ${error.message}`);
+      if (attempt < maxRetries) {
+        console.log(`Waiting for ${retryDelay / 1000} seconds before retrying...`);
+        await sleep(retryDelay);
+      } else {
+        return false; // Rethrow the last error
+      }
+    }
+  }
+};
 
 const submission = new Submission();
 module.exports = { submission };
