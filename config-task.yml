@@ -45,6 +45,10 @@ requirementsTags:
     value: 'TIINGO_TOKEN'
     description: 'TIINGO TOKEN'
   - type: TASK_VARIABLE
+    value: 'SPHERON_KEY'
+    description: 'Used to store the data. Spheron offers secure, decentralized data storage using blockchain technology for enhanced reliability and transparent data management. Do not have the key? Click the Get Key button to get one.'
+    retrievalInfo: 'https://faucet-api.koii.network/api/get-spheron-storage-key;GET;SYSTEM_WALLET_PUBLIC_KEY'
+  - type: TASK_VARIABLE
     value: 'THRESHOLD'
     description: 'What percent delta will trigger the alert'
   - type: TASK_VARIABLE
@@ -60,7 +64,7 @@ requirementsTags:
 # OPTIONAL variables variables for creating task / REQUIRED variables for update task
 
 # OPTIONAL Only provide the taskId if you are updating the task otherwise leave blank
-task_id: 'gRVz4iQWuA5A41f7demxbiF4nT4iv43fRZTBYUVkuBa'
+task_id: '6egxvqG9GySsZpSmAyK6zHHEJipu9eLdv85tqzhP7eEB'
 
 # Provide the description for changes made in new version of task
 migrationDescription: 'dev testing'

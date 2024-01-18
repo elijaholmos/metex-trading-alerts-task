@@ -12,3 +12,4 @@ config/*
 taskStateInfoKeypair.json
 localKOIIDB.db
 yarn-error.log
+data.json
