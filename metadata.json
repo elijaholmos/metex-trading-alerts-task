@@ -1,6 +1,6 @@
 {
   "tickers": ["AAPL", "GME", "MSFT", "TSLA", "AMZN"],
-  "threshold": 0.01,
+  "threshold": 0.0003,
   "scrapers": [
     {
       "name": "bloomberg",
