@@ -14,18 +14,16 @@ class Audit {
       if (!data) return false;
       // For unsuccessful flow we return false (Means the audited node submission is incorrect)
       // Submission value should have every key on the object
-      else {
-        if (!Array.isArray(data)) return false;
-        for (const el of data)
-          if (
-            !['ticker', 'initialPrice', 'price', 'delta', 'threshold', 'articles'].every((key) =>
-              Object.hasOwn(el, key),
-            )
+      if (!Array.isArray(data)) return false;
+      for (const el of data)
+        if (
+          !['ticker', 'initialPrice', 'price', 'delta', 'threshold', 'articles'].every((key) =>
+            Object.hasOwn(el, key),
           )
-            return false;
-        console.log('successful submision detected, returning true');
-        return true;
-      }
+        )
+          return false;
+      console.log('successful submision detected, returning true');
+      return true;
     } catch (e) {
       console.error('validateNode error', e);
       return false;
