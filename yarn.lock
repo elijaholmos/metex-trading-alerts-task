@@ -630,10 +630,10 @@
     "@jridgewell/resolve-uri" "^3.1.0"
     "@jridgewell/sourcemap-codec" "^1.4.14"
 
-"@metex/trading-alerts@^0.1.2":
-  version "0.1.2"
-  resolved "https://registry.yarnpkg.com/@metex/trading-alerts/-/trading-alerts-0.1.2.tgz#face651fdeb229d32a27583ec0c21923e12d2895"
-  integrity sha512-dYbH4WMoixrnVVeJ+gTynMsAOTH9radViRi950HD2uLMZVeCFyPYeDDaw+jgSkU31kvAaouy18sZsSo3Gy8l5g==
+"@metex/trading-alerts@^0.1.3":
+  version "0.1.3"
+  resolved "https://registry.yarnpkg.com/@metex/trading-alerts/-/trading-alerts-0.1.3.tgz#2f5420369f30a1bc0b91aaa52369ad77a60da355"
+  integrity sha512-MZ9k1RagoaIVj81W6cryf2oqJYj/cOk4Jh6HiYmpTzVMXxrHLXwZZDujfuuttMepYjezCtiaflLBlvWkCWhodw==
   dependencies:
     ws "8.13.0"
 

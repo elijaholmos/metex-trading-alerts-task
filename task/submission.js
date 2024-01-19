@@ -113,10 +113,10 @@ class Submission {
 
         const finalStoreData = {};
         watchers.forEach((watcher) =>
-          watcher.on('close', ({ initialPrice, endPrice }) => {
-            console.log(`watcher closed ${watcher.ticker}`, initialPrice, endPrice);
+          watcher.on('close', ({ initialPrice, lastPrice }) => {
+            console.log(`watcher closed ${watcher.ticker}`, initialPrice, lastPrice);
             // set the store with the key of ticker and the value of endprice?
-            finalStoreData[watcher.ticker] = endPrice;
+            finalStoreData[watcher.ticker] = lastPrice;
           }),
         );
 
