@@ -1,20 +1,26 @@
 const { namespaceWrapper } = require('../_koiiNode/koiiNode');
-const { TickerWatcher, dynamicImport, scrapers } = require('@metex/trading-alerts');
-const { WebClient } = require('@slack/web-api');
+const { TickerWatcher, scrapers } = require('@metex/trading-alerts');
+const { SpheronClient, ProtocolEnum } = require('@spheron/storage');
 const puppeteer = require('puppeteer');
 const PCR = require('puppeteer-chromium-resolver');
+const { writeFile } = require('fs/promises');
+const { default: axios } = require('axios');
 
 class Submission {
   task(round) {
+    console.log(`beginning task for round ${round}`);
+    this.performEnvCheck(process.env);
+
     // namespaceWrapper.getTaskState().stake_list;
-    // how to use stores and track multiple stocks at once?
 
     return new Promise(async (resolve) => {
       try {
-        const slack = new WebClient(process.env.SLACK_TOKEN);
+        const metadata = await getTaskMetadata();
+        console.log('retrieved metadata', JSON.stringify(metadata));
+        const finalPriceSubmissionData = [];
+
         console.log(`launching browser...`);
-        const options = {};
-        const stats = await PCR(options);
+        const stats = await PCR({});
         console.log(
           '*****************************************CALLED PURCHROMIUM RESOLVER*****************************************',
         );
@@ -25,7 +31,9 @@ class Submission {
           executablePath: stats.executablePath,
         });
 
-        const TICKERS = ['AAPL', 'GME', 'MSFT', 'TSLA', 'AMZN'];
+        const TICKERS = metadata.tickers;
+        if (!TICKERS) throw new Error('No tickers found in metadata');
+        console.log('parsed TICKERS to the following value', TICKERS);
 
         const priceChangeHandler = async ({ ticker, initialPrice, price, delta, threshold }) => {
           console.log('price change!', ticker, initialPrice, price, delta);
@@ -37,14 +45,27 @@ class Submission {
           );
           // TODO - Enable console logs in the context of the page and export them for diagnostics here
           await page.setViewport({ width: 1920, height: 1080 });
+          console.log('metadata.scrapers', JSON.stringify(metadata.scrapers));
           console.log('detecting scrapersList...');
-          const scrapersList = [scrapers.bloomberg];
+          /**
+           * @type {Array<Scraper & {run: function}>}
+           */
+          const scrapersList = metadata.scrapers.reduce((acc, _scraper) => {
+            const scraper = scrapers[_scraper.name];
+            if (!scraper) {
+              console.log(`[${ticker}]: scraper ${_scraper.name} not found in scrapers`);
+              return acc;
+            }
+            return [...acc, { ..._scraper, run: scraper }];
+          }, []);
           console.log('got scrapersList!', scrapersList);
 
           console.log(`[${ticker}]: getting articles...`);
           const articles = [];
           for (const scraper of scrapersList)
-            articles.push(...((await scraper({ page, ticker })) ?? []));
+            articles.push(
+              ...((await scraper.run({ page, ticker, keywords: scraper.keywords })) ?? []),
+            );
           console.log(`[${ticker}]: got articles!`, articles);
           page.close();
 
@@ -57,17 +78,28 @@ class Submission {
               \r${articles.map(({ title, url }) => `• <${url}|${title}>`).join('\n')}
             `;
 
-          await slack.chat.postMessage({
-            channel: '#trading-alerts',
-            text,
-          });
+          // store results to be published later
+          const storeData = {
+            ticker,
+            initialPrice,
+            price,
+            delta,
+            threshold,
+            articles,
+          };
+          console.log(
+            'storing the following data into the finalPriceSubmissionData variable',
+            storeData,
+          );
+          finalPriceSubmissionData.push(storeData);
         };
 
-        const threshold = Number(process.env?.THRESHOLD?.replace('%', '')) / 100 || 0.03;
-        console.log(`Threshold incoming as ${process.env?.THRESHOLD}, set to ${threshold}`);
+        const threshold = metadata.threshold ?? 0.03;
+        console.log(`Threshold incoming as ${metadata.threshold}, set to ${threshold}`);
         const watchers = TICKERS.map(
           (ticker) =>
             new TickerWatcher({
+              token: process.env.TIINGO_TOKEN,
               ticker,
               threshold,
               // duration: 5000,
@@ -81,16 +113,22 @@ class Submission {
 
         const finalStoreData = {};
         watchers.forEach((watcher) =>
-          watcher.on('close', ({ initialPrice, endPrice }) => {
-            console.log(`watcher closed ${watcher.ticker}`, initialPrice, endPrice);
+          watcher.on('close', ({ initialPrice, lastPrice }) => {
+            console.log(`watcher closed ${watcher.ticker}`, initialPrice, lastPrice);
             // set the store with the key of ticker and the value of endprice?
-            finalStoreData[watcher.ticker] = endPrice;
+            finalStoreData[watcher.ticker] = lastPrice;
           }),
         );
 
         setTimeout(async () => {
+          console.log('in setTimeout');
+          console.log('closing browser...');
           await browser.close();
-          await namespaceWrapper.storeSet('prices', finalStoreData);
+          console.log('uploading file to IPFS...');
+          const cid = await this.storeData(finalPriceSubmissionData);
+          console.log('writing data to stores...');
+          await namespaceWrapper.storeSet('cid', cid);
+          await namespaceWrapper.storeSet('endPrices', finalStoreData);
           void resolve(finalStoreData);
         }, 90000 + 1000);
       } catch (err) {
@@ -103,7 +141,7 @@ class Submission {
   async submitTask(roundNumber) {
     console.log('submitTask called with round', roundNumber);
     try {
-      console.log('inside try');
+      console.log('inside submitTask try');
       console.log(await namespaceWrapper.getSlot(), 'current slot while calling submit');
       const submission = await this.fetchSubmission(roundNumber);
       console.log('SUBMISSION', submission);
@@ -120,15 +158,95 @@ class Submission {
 
     // fetching round number to store work accordingly
 
-    console.log('IN FETCH SUBMISSION');
+    console.log(`IN FETCH SUBMISSION, round number ${round}`);
 
     // The code below shows how you can fetch your stored value from level DB
 
-    const value = await namespaceWrapper.storeGet('prices'); // retrieves the value
-    console.log('VALUE (prices)', value);
-    return value;
+    const cid = await namespaceWrapper.storeGet('cid'); // retrieves the value
+    console.log('VALUE (cid)', cid);
+    return cid;
+  }
+
+  async storeData(data) {
+    try {
+      let cid;
+      const client = new SpheronClient({ token: process.env.SPHERON_KEY });
+      let path = 'data.json';
+      let basePath = '';
+      try {
+        basePath = await namespaceWrapper.getBasePath();
+        await writeFile(`${basePath}/${path}`, JSON.stringify(data));
+      } catch (err) {
+        console.log('writeFile error', err);
+      }
+
+      try {
+        // console.log(`${basePath}/${path}`)
+        let spheronData = await client.upload(`${basePath}/${path}`, {
+          protocol: ProtocolEnum.IPFS,
+          name: 'data.json',
+          onUploadInitiated: (uploadId) => {
+            console.log(`Upload with id ${uploadId} started...`);
+          },
+          onChunkUploaded: (uploadedSize, totalSize) => {
+            console.log(`Uploaded ${uploadedSize} of ${totalSize} Bytes.`);
+          },
+        });
+        cid = spheronData.cid;
+      } catch (err) {
+        console.log('error uploading to IPFS, trying again', err);
+      }
+      return cid;
+    } catch (e) {
+      console.log('Error storing files', e);
+    }
+  }
+
+  performEnvCheck(env) {
+    const vars = ['TIINGO_TOKEN', 'SPHERON_KEY'];
+    for (const key of vars) if (!env[key]) throw new Error(`Missing environment variable ${key}`);
   }
 }
+
+/**
+ * @typedef {object} Metadata Task metadata
+ * @prop {string} version
+ * @prop {Array<string>} tickers
+ * @prop {number} threshold
+ * @prop {Array<Scraper>} scrapers
+ */
+/**
+ * @typedef {object} Scraper Scraper data object
+ * @prop {string} name
+ * @prop {Array<string>} keywords
+ */
+
+const sleep = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
+
+/**
+ * @returns {Promise<Metadata>}
+ */
+const getTaskMetadata = async (maxRetries = 3, retryDelay = 3000) => {
+  const url = 'https://elijaholmos.github.io/metex-trading-alerts-task/metadata.json';
+  for (let attempt = 1; attempt <= maxRetries; attempt++) {
+    try {
+      const response = await axios.get(url);
+      if (response.status === 200) {
+        return response.data;
+      } else {
+        console.log(`Attempt ${attempt}: Received status ${response.status}`);
+      }
+    } catch (error) {
+      console.log(`Attempt ${attempt} failed: ${error.message}`);
+      if (attempt < maxRetries) {
+        console.log(`Waiting for ${retryDelay / 1000} seconds before retrying...`);
+        await sleep(retryDelay);
+      } else {
+        return false; // Rethrow the last error
+      }
+    }
+  }
+};
 
 const submission = new Submission();
 module.exports = { submission };

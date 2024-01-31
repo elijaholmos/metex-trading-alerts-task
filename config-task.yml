@@ -1,7 +1,7 @@
 # Name and metadata of your task
 task_name: 'Trading Alerts Task'
 author: 'metex'
-description: 'Test desc'
+description: 'https://www.metex.co'
 repositoryUrl: 'https://github.com/elijaholmos/metex-trading-alerts-task'
 imageUrl: 'imageUrl'
 
@@ -13,7 +13,7 @@ task_executable_network: 'IPFS'
 task_audit_program: 'dist/main.js'
 
 # Total round time of your task : it must be given in slots and each slot is roughly equal to 408ms
-round_time: 250
+round_time: 500
 
 audit_window: 250
 submission_window: 250
@@ -42,14 +42,12 @@ requirementsTags:
   #   value: 'WEB3.STORAGE'
   #   description: 'used to store the data'
   - type: TASK_VARIABLE
-    value: 'SLACK_TOKEN'
-    description: 'slack token'
-  - type: TASK_VARIABLE
     value: 'TIINGO_TOKEN'
     description: 'TIINGO TOKEN'
   - type: TASK_VARIABLE
-    value: 'THRESHOLD'
-    description: 'What percent delta will trigger the alert'
+    value: 'SPHERON_KEY'
+    description: 'Used to store the data. Spheron offers secure, decentralized data storage using blockchain technology for enhanced reliability and transparent data management. Do not have the key? Click the Get Key button to get one.'
+    retrievalInfo: 'https://faucet-api.koii.network/api/get-spheron-storage-key;GET;SYSTEM_WALLET_PUBLIC_KEY'
   - type: CPU
     value: '4-core'
   - type: RAM
@@ -60,7 +58,7 @@ requirementsTags:
 # OPTIONAL variables variables for creating task / REQUIRED variables for update task
 
 # OPTIONAL Only provide the taskId if you are updating the task otherwise leave blank
-task_id: 'BWmVHADrbvnCP4TWVobuB5fm9MmYuKPJ1zsuU2yEumMt'
+task_id: '3Lw4vwVXggmUo1GeyXepjZi4ozw8NR6pEBgCfkAF7zC9'
 
 # Provide the description for changes made in new version of task
 migrationDescription: 'dev testing'
