@@ -1,7 +1,7 @@
 {
-  "version": "0.1.0",
+  "version": "1.0.0",
   "tickers": ["AAPL", "GME", "MSFT", "TSLA", "AMZN"],
-  "threshold": 0.01,
+  "threshold": 0.03,
   "scrapers": [
     {
       "name": "bloomberg",
